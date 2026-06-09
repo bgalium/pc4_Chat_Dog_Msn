@@ -1,0 +1,32 @@
+# Java / Maven
+target/
+*.class
+*.iml
+.idea/
+*.iws
+*.ipr
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+
+# Go
+sales-node/sales-node
+sales-node/sales-node.exe
+sales-node/*.exe
+
+# Runtime data (no subir al repo)
+downloads/
+reports/
+clients.json
+orders.json
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
