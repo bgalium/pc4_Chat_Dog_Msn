@@ -1,12 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>uni.cc4p1</groupId>
-    <artifactId>server</artifactId>
+    <artifactId>dog-messenger-desktop</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>dog-messenger-desktop</name>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -14,22 +16,36 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <!-- ZXing: generación de códigos QR para la función de clonación de chat -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+    </dependencies>
+
     <build>
+        <finalName>dog-messenger-desktop</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <finalName>dog-messenger-server</finalName>
                     <archive>
                         <manifest>
-                            <mainClass>uni.cc4p1.server.Server</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>uni.cc4p1.client.DesktopApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>
