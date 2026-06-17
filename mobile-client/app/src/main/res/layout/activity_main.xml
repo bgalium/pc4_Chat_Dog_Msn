@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg"
+    tools:context=".MainActivity">
+
+    <!-- Header: username + ID + recipient -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/card"
+        android:gravity="center_vertical"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/tvUserInfo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Connect to start"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etRecipient"
+            android:layout_width="80dp"
+            android:layout_height="36dp"
+            android:background="@drawable/edittext_bg"
+            android:gravity="center"
+            android:hint="ID"
+            android:inputType="number"
+            android:padding="4dp"
+            android:textColor="@color/fg"
+            android:textColorHint="@color/fgSecondary"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Connection controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:background="@color/bg">
+
+        <EditText
+            android:id="@+id/etIp"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/edittext_bg"
+            android:gravity="center"
+            android:hint="Server IP"
+            android:padding="4dp"
+            android:textColor="@color/fg"
+            android:textColorHint="@color/fgSecondary"
+            android:textSize="12sp" />
+
+        <EditText
+            android:id="@+id/etPort"
+            android:layout_width="70dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/edittext_bg"
+            android:gravity="center"
+            android:hint="Port"
+            android:inputType="number"
+            android:padding="4dp"
+            android:textColor="@color/fg"
+            android:textColorHint="@color/fgSecondary"
+            android:textSize="12sp" />
+
+        <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/edittext_bg"
+            android:gravity="center"
+            android:hint="User"
+            android:padding="4dp"
+            android:textColor="@color/fg"
+            android:textColorHint="@color/fgSecondary"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnConnect"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/btn_accent"
+            android:paddingHorizontal="12dp"
+            android:text="Connect"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnDisconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/btn_border"
+            android:enabled="false"
+            android:paddingHorizontal="12dp"
+            android:text="X"
+            android:textColor="@color/fg"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Chat log -->
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/bg"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/tvMessages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="-- Dog Messenger --"
+            android:textColor="@color/fg"
+            android:textSize="12sp" />
+    </ScrollView>
+
+    <!-- Action buttons row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/card"
+        android:padding="4dp">
+
+        <Button
+            android:id="@+id/btnGroups"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="2dp"
+            android:background="@drawable/btn_border"
+            android:enabled="false"
+            android:text="Groups"
+            android:textAllCaps="false"
+            android:textColor="@color/fg"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnAttach"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="2dp"
+            android:background="@drawable/btn_border"
+            android:enabled="false"
+            android:text="File"
+            android:textAllCaps="false"
+            android:textColor="@color/fg"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnQR"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="2dp"
+            android:background="@drawable/btn_border"
+            android:enabled="false"
+            android:text="QR"
+            android:textAllCaps="false"
+            android:textColor="@color/fg"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnMetrics"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_border"
+            android:enabled="false"
+            android:text="Metrics"
+            android:textAllCaps="false"
+            android:textColor="@color/fg"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Input area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/card"
+        android:padding="8dp">
+
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/edittext_bg"
+            android:enabled="false"
+            android:hint="Type a message..."
+            android:paddingHorizontal="10dp"
+            android:textColor="@color/fg"
+            android:textColorHint="@color/fgSecondary"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="@drawable/btn_accent"
+            android:enabled="false"
+            android:paddingHorizontal="20dp"
+            android:text="Send"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>
