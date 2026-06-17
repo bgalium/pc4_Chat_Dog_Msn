@@ -1,4 +1,4 @@
-package uni.cc4p1.server;
+package uni.cc4p1.client.model;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -7,10 +7,11 @@ import java.io.IOException;
 public class MessageParser {
 
     public static Message readHeader(DataInputStream in) throws IOException {
-        int payloadLen  = in.readInt();
-        byte typeCode   = in.readByte();
-        short senderId  = in.readShort();
-        short receiverId = in.readShort();
+        int payloadLen = in.readInt();       // 4 bytes
+        byte typeCode = in.readByte();       // 1 byte
+        short senderId = in.readShort();     // 2 bytes
+        short receiverId = in.readShort();   // 2 bytes
+
         MessageType type = MessageType.fromCode(typeCode);
         return new Message(payloadLen, type, senderId, receiverId);
     }
