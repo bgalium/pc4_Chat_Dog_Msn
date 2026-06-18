@@ -71,6 +71,7 @@ public class ClientHandler extends Thread {
                  FILE_CHUNK,
                  FILE_END   -> relay(header, payload);
             case GROUP       -> handleGroup(header, payload);
+            case SALES       -> handleSales(header, payload);
             case QR          -> handleQr(payload);
             case METRICS     -> handleMetrics();
             case DH_EXCHANGE -> handleDhExchange(header, payload);
@@ -190,6 +191,23 @@ public class ClientHandler extends Thread {
         r[3] = (byte) (gid & 0xFF);
         System.arraycopy(msgBytes, 0, r, 4, msgBytes.length);
         return r;
+    }
+
+    // ─── SALES ───────────────────────────────────────────────────────────────
+
+    private void handleSales(Message header, byte[] payload) throws IOException {
+        Short salesId = registry.getIdByUsername("ventas");
+        if (salesId == null) {
+            sendError((byte) 5, "El nodo de ventas no está conectado. Inicia sales-node/main.py primero.");
+            return;
+        }
+        ClientHandler salesHandler = registry.getHandler(salesId);
+        if (salesHandler == null) {
+            sendError((byte) 5, "Nodo de ventas no disponible.");
+            return;
+        }
+        // Reenvía el mensaje al nodo de ventas con el sender_id original
+        salesHandler.send(new Message(payload.length, MessageType.SALES, userId, salesId), payload);
     }
 
     // ─── QR ──────────────────────────────────────────────────────────────────

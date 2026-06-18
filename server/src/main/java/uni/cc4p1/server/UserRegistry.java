@@ -48,6 +48,10 @@ public class UserRegistry {
 
     public int getOnlineCount() { return handlers.size(); }
 
+    public Short getIdByUsername(String username) {
+        return usernames.get(username);
+    }
+
     public void storeDhKey(short userId, byte[] publicKey) { dhPublicKeys.put(userId, publicKey); }
     public byte[] getDhKey(short userId) { return dhPublicKeys.get(userId); }
 }

@@ -124,7 +124,7 @@ public class ChatFrame extends JFrame {
         txtInput.addActionListener(e -> sendMessage());
         footerPanel.add(txtInput, BorderLayout.CENTER);
 
-        JPanel actionPanel = new JPanel(new GridLayout(1, 4, 6, 0));
+        JPanel actionPanel = new JPanel(new GridLayout(2, 3, 6, 4));
         actionPanel.setBackground(bgColor);
         btnAttach = darkBtn("📎 Archivo", cardColor, fgColor, boldFont);
         btnAttach.addActionListener(e -> selectAndSendFile());
@@ -133,8 +133,14 @@ public class ChatFrame extends JFrame {
         btnGroups.addActionListener(e -> new GroupsDialog(this, sender, localUserId).setVisible(true));
         actionPanel.add(btnGroups);
         JButton btnQR = darkBtn("📷 QR", cardColor, fgColor, boldFont);
-        btnQR.addActionListener(e -> requestQrToken());
+        btnQR.addActionListener(e -> showQrMenu());
         actionPanel.add(btnQR);
+        JButton btnSales = darkBtn("💰 Ventas", cardColor, fgColor, boldFont);
+        btnSales.addActionListener(e -> new SalesDialog(this, sender, localUserId).setVisible(true));
+        actionPanel.add(btnSales);
+        JButton btnMetrics = darkBtn("📊 Métricas", cardColor, fgColor, boldFont);
+        btnMetrics.addActionListener(e -> requestMetrics());
+        actionPanel.add(btnMetrics);
         JButton btnSend = darkBtn("Enviar 🐾", accentColor, Color.WHITE, boldFont);
         btnSend.addActionListener(e -> sendMessage());
         actionPanel.add(btnSend);
@@ -253,6 +259,19 @@ public class ChatFrame extends JFrame {
                 JOptionPane.showMessageDialog(this,
                         prettyJson(json), "Métricas del servidor", JOptionPane.INFORMATION_MESSAGE);
             }
+            case SALES -> {
+                if (p == null || p.length == 0) return;
+                byte subCmd = p[0];
+                String resp = p.length > 1 ? new String(p, 1, p.length - 1, StandardCharsets.UTF_8) : "";
+                String label = switch (subCmd) {
+                    case 0x01 -> "[VENTAS] Registro";
+                    case 0x02 -> "[VENTAS] Pedido";
+                    case 0x03 -> "[VENTAS] Consulta";
+                    case 0x04 -> "[VENTAS] Reporte";
+                    default   -> "[VENTAS]";
+                };
+                appendLog(String.format("[%s] %s: %s", t, label, resp));
+            }
             case ERROR -> {
                 int code = p != null && p.length > 0 ? p[0] : -1;
                 String msg = p != null && p.length > 1
@@ -276,10 +295,35 @@ public class ChatFrame extends JFrame {
         appendLog("[" + new SimpleDateFormat("HH:mm").format(new Date()) + "] Yo" + lock + ": " + text);
     }
 
+    private void showQrMenu() {
+        String[] opts = {"Generar mi QR", "Canjear token"};
+        int choice = JOptionPane.showOptionDialog(this, "¿Qué deseas hacer?", "QR",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opts, opts[0]);
+        if (choice == 0) requestQrToken();
+        else if (choice == 1) redeemQrToken();
+    }
+
     private void requestQrToken() {
         sender.queueMessage(new Message(1, MessageType.QR, localUserId, (short) 0xFFFF),
                 new byte[]{QR_REQUEST});
         appendLog("[QR] Solicitando token...");
+    }
+
+    private void redeemQrToken() {
+        String token = JOptionPane.showInputDialog(this, "Pega el token QR:", "Canjear QR",
+                JOptionPane.PLAIN_MESSAGE);
+        if (token == null || token.isBlank()) return;
+        byte[] tb = token.trim().getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        byte[] payload = new byte[1 + tb.length];
+        payload[0] = QR_REDEEM;
+        System.arraycopy(tb, 0, payload, 1, tb.length);
+        sender.queueMessage(new Message(payload.length, MessageType.QR, localUserId, (short) 0xFFFF), payload);
+        appendLog("[QR] Canjeando token...");
+    }
+
+    private void requestMetrics() {
+        sender.queueMessage(new Message(0, MessageType.METRICS, localUserId, (short) 0xFFFF), new byte[0]);
+        appendLog("[MÉTRICAS] Solicitando métricas del servidor...");
     }
 
     private void requestDhIfNeeded() {
