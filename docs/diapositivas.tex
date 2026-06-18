@@ -1,0 +1,621 @@
+ %% ============================================================
+%% Diapositivas Práctica 04 — Dog Messenger
+%% CC4P1 Programación Concurrente y Distribuida  2026-I
+%% Escuela de Ciencias de la Computación — UNI
+%% ============================================================
+\documentclass[aspectratio=169,14pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{makecell}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+%% ── Colores ──────────────────────────────────────────────────────────────────
+\definecolor{accentblue}{RGB}{30,90,200}
+\definecolor{accentgreen}{RGB}{20,140,60}
+\definecolor{accentorange}{RGB}{200,100,0}
+\definecolor{javabg}{RGB}{248,248,255}
+\definecolor{kotlinbg}{RGB}{248,255,248}
+\definecolor{pybg}{RGB}{255,252,240}
+\definecolor{commentcolor}{RGB}{100,120,100}
+\definecolor{keywordcolor}{RGB}{0,0,180}
+\definecolor{stringcolor}{RGB}{160,32,32}
+\definecolor{framecolor}{RGB}{180,180,200}
+
+\setbeamercolor{title}{fg=white,bg=accentblue}
+\setbeamercolor{frametitle}{fg=white,bg=accentblue}
+
+%% ── Estilos listings ─────────────────────────────────────────────────────────
+\lstdefinestyle{java}{
+  language=Java,
+  backgroundcolor=\color{javabg},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{keywordcolor}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  breaklines=true, breakatwhitespace=true,
+  frame=single, rulecolor=\color{framecolor},
+  tabsize=2, showstringspaces=false,
+  columns=fullflexible,
+  morekeywords={var,val,record,sealed,permits,yield}
+}
+
+\lstdefinestyle{kotlin}{
+  language=Java,
+  backgroundcolor=\color{kotlinbg},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{accentgreen}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  breaklines=true, breakatwhitespace=true,
+  frame=single, rulecolor=\color{framecolor},
+  tabsize=2, showstringspaces=false,
+  columns=fullflexible,
+  morekeywords={fun,val,var,data,class,object,companion,override,suspend,launch,coroutineScope}
+}
+
+\lstdefinestyle{python}{
+  language=Python,
+  backgroundcolor=\color{pybg},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{accentorange}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  breaklines=true, breakatwhitespace=true,
+  frame=single, rulecolor=\color{framecolor},
+  tabsize=2, showstringspaces=false,
+  columns=fullflexible
+}
+
+\lstset{
+  literate=
+    {á}{{\'{a}}}1 {é}{{\'{e}}}1 {í}{{\'{i}}}1 {ó}{{\'{o}}}1 {ú}{{\'{u}}}1
+    {Á}{{\'{A}}}1 {É}{{\'{E}}}1 {Í}{{\'{I}}}1 {Ó}{{\'{O}}}1 {Ú}{{\'{U}}}1
+    {ñ}{{\~{n}}}1 {Ñ}{{\~{N}}}1 {ü}{{\"u}}1    {Ü}{{\"U}}1
+}
+
+%% ── Comandos auxiliares ──────────────────────────────────────────────────────
+\newcommand{\captura}[2]{
+  \begin{figure}[t]
+    \centering
+    \fcolorbox{gray}{white}{\begin{minipage}{0.85\textwidth}
+      \centering
+      \vspace{0.35cm}
+      {\Large \color{gray!60} [Captura: #2]}
+      \vspace{0.35cm}
+    \end{minipage}}
+  \end{figure}
+}
+
+
+
+%% =============================================================================
+\begin{document}
+
+%% ── Portada ──────────────────────────────────────────────────────────────────
+\begin{frame}
+\centering
+\vspace*{0.3cm}
+
+{\Large \textbf{Universidad Nacional de Ingeniería}}\\[0.2cm]
+{\large Escuela de Ciencias de la Computación}\\[0.1cm]
+{\large CC4P1 --- Programación Concurrente y Distribuida}\\[0.1cm]
+{\large 2026-I}
+
+\vspace{0.8cm}
+\rule{\linewidth}{1.5pt}\\[0.3cm]
+{\LARGE \textbf{Dog Messenger}}\\[0.2cm]
+{\large Sistema de Mensajería Distribuida Desktop y Móvil}\\[0.1cm]
+{\large con Nodo de Ventas Automatizado}
+\rule{\linewidth}{1.5pt}
+
+\vspace{0.6cm}
+
+\begin{tabular}{ll}
+\textbf{Práctica:}    & 04 \\[4pt]
+\textbf{Integrantes:} & Walter Poma Navarro \\
+                      & Jesus Santa Cruz Basilio\\
+                      & Max Serrano Arostegui\\[4pt]
+\textbf{Lenguajes:}   & LP1 --- Java 17 (servidor + cliente desktop) \\
+                      & LP2 --- Kotlin / Android (cliente móvil) \\
+                      & LP3 --- Python 3.10+ (nodo de ventas) \\[4pt]
+\textbf{Fecha:}       & Junio 2026 \\
+\end{tabular}
+
+\vfill
+\small
+\textit{Práctica 04 --- CC4P1}
+\end{frame}
+
+%% ── Índice ───────────────────────────────────────────────────────────────────
+\begin{frame}{Contenido}
+\tableofcontents
+\end{frame}
+
+%% =============================================================================
+\section{Introducción}
+
+\begin{frame}{Dog Messenger}
+\begin{itemize}
+  \item Sistema de mensajería distribuida en tiempo real
+  \item Clientes heterogéneos: Java desktop, Android/Kotlin, Python bot
+  \item Comunicación via sockets TCP binarios (sin frameworks)
+  \item Concurrencia mediante hilos, estructuras thread-safe
+  \item Encriptación punto a punto (ECDH + AES-256)
+  \item Nodo de ventas automatizado con NLP
+\end{itemize}
+
+\vfill
+\centering
+\emph{Tres lenguajes, un solo protocolo}
+\end{frame}
+
+%% =============================================================================
+\section{Arquitectura del Sistema}
+
+\begin{frame}{Arquitectura Cliente-Servidor (Estrella)}
+\centering
+\begin{tikzpicture}[
+  node distance=1.5cm and 2cm,
+  box/.style={rectangle, rounded corners=4pt, draw, minimum width=2.4cm,
+              minimum height=0.9cm, align=center, font=\small},
+  server/.style={box, fill=blue!15, draw=accentblue, thick},
+  client/.style={box, fill=green!10, draw=accentgreen},
+  bot/.style={box, fill=orange!15, draw=accentorange},
+  arr/.style={-Latex, thick}
+]
+\node[server] (srv) {\textbf{Servidor}\\Java 17};
+
+\node[client, above left=of srv]  (dc1) {Desktop\\Java};
+\node[client, above right=of srv] (dc2) {Desktop\\Java};
+\node[client, below left=of srv]  (and) {Android\\Kotlin};
+\node[bot,    below right=of srv] (bot) {Nodo Ventas\\Python};
+
+\draw[arr,<->] (srv) -- (dc1) node[midway,above left,font=\tiny]{TCP};
+\draw[arr,<->] (srv) -- (dc2) node[midway,above right,font=\tiny]{TCP};
+\draw[arr,<->] (srv) -- (and) node[midway,below left,font=\tiny]{TCP};
+\draw[arr,<->] (srv) -- (bot) node[midway,below right,font=\tiny]{TCP};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}[shrink=10]{Patrones de Concurrencia}
+\begin{description}
+  \item[Thread-per-Connection] \hfill \\
+    Cada cliente ejecuta su propio \texttt{ClientHandler} en un hilo separado.
+  \item[Producer-Consumer] \hfill \\
+    \texttt{BlockingQueue} separa la GUI del envío al socket.
+  \item[Thread-safe Registry] \hfill \\
+    \texttt{ConcurrentHashMap} + \texttt{AtomicInteger} para registro concurrente.
+\end{description}
+
+\vfill
+\centering
+\begin{tikzpicture}[
+  node distance=0.8cm and 1.2cm,
+  thr/.style={rectangle, rounded corners=3pt, draw, minimum width=3.8cm,
+              minimum height=0.6cm, align=center, font=\scriptsize},
+  srv/.style={thr, fill=blue!10, draw=accentblue},
+  hnd/.style={thr, fill=green!8, draw=accentgreen},
+  arr/.style={-Latex, thick},
+  arrd/.style={-Latex, thick, dashed}
+]
+\node[srv] (main) {\texttt{main()} --- \texttt{while(true) \{ accept(); \}}};
+\node[hnd, below left=of main] (h1) {\texttt{ClientHandler-1}};
+\node[hnd, below=of main]      (h2) {\texttt{ClientHandler-2}};
+\node[hnd, below right=of main](h3) {\texttt{ClientHandler-3}};
+
+\draw[arr] (main.south) -- ++(0,-0.25) -| (h1.north);
+\draw[arr] (main.south) -- ++(0,-0.25) -- (h2.north);
+\draw[arr] (main.south) -- ++(0,-0.25) -| (h3.north);
+
+\node[hnd, below=of h2, yshift=-0.6cm] (loop) {
+  \parbox{3.6cm}{\centering
+  \texttt{readLoop()} $\rightarrow$ \texttt{dispatch()}\\
+  $\downarrow$\\
+  \texttt{handleAuth / Text / File / Group / ...}\\
+  $\downarrow$\\
+  \texttt{send() (synchronized)}}
+};
+\draw[arrd] (h2.south) -- (loop.north);
+\node[fit=(h1)(h3)(loop), inner sep=2pt, draw=gray!40, dashed,
+      label={[font=\tiny,gray]below:Tres hilos ejecutándose en paralelo}] {};
+\end{tikzpicture}
+\end{frame}
+
+%% =============================================================================
+\section{Protocolo Binario}
+
+\begin{frame}{Protocolo Binario --- Header de 9 bytes}
+\begin{center}
+\small
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{payload\_len} & \textbf{type} & \textbf{sender\_id} & \textbf{receiver\_id} \\
+4 bytes (int) & 1 byte & 2 bytes (short) & 2 bytes (short) \\
+\hline
+\end{tabular}
+\end{center}
+
+\vfill
+\begin{itemize}
+  \item Big-endian, compatible con \texttt{DataInputStream/OutputStream}
+  \item 11 tipos de mensaje (AUTH, TEXT, FILE, GROUP, QR, SALES, METRICS, DH\_EXCHANGE, ...)
+  \item Misma implementación en Java, Kotlin y Python
+\end{itemize}
+
+\vfill
+\centering
+\emph{Sin JSON, sin XML, sin WebSocket --- solo bytes crudos}
+\end{frame}
+
+\begin{frame}[fragile]{Parser en los tres lenguajes}
+\begin{columns}[T]
+\column{0.33\textwidth}
+\centering{\textbf{Java}}
+\begin{lstlisting}[style=java]
+int payloadLen = in.readInt();
+byte type = in.readByte();
+short senderId = in.readShort();
+short receiverId = in.readShort();
+Message msg = new Message(
+    payloadLen, type,
+    senderId, receiverId);
+\end{lstlisting}
+\column{0.33\textwidth}
+\centering{\textbf{Kotlin}}
+\begin{lstlisting}[style=kotlin]
+val payloadLen = input.readInt()
+val typeCode = input.readByte()
+val senderId = input.readShort()
+val receiverId = input.readShort()
+return Message(
+    payloadLen, typeCode,
+    senderId, receiverId)
+\end{lstlisting}
+\column{0.33\textwidth}
+\centering{\textbf{Python}}
+\begin{lstlisting}[style=python]
+import struct
+
+def read_header(sock):
+    data = sock.recv(9, MSG_WAITALL)
+    payload_len, type_code, \
+    sender_id, receiver_id = \
+        struct.unpack('>iBHH', data)
+    return (type_code,
+            sender_id, receiver_id,
+            payload_len)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+%% =============================================================================
+\section{Servidor}
+
+\begin{frame}[fragile]{Servidor --- Thread-per-Connection}
+\begin{lstlisting}[style=java]
+try (ServerSocket server = new ServerSocket(port)) {
+    while (true) {
+        Socket client = server.accept();
+        new ClientHandler(client).start();
+    }
+}
+\end{lstlisting}
+
+\vfill
+\begin{itemize}
+  \item Hilo principal solo acepta conexiones
+  \item Cada \texttt{ClientHandler} corre en su propio hilo
+  \item Dispatch por tipo de mensaje via \texttt{switch}
+  \item Envío \texttt{synchronized} para evitar entrelazado de bytes
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Registro Thread-safe}
+\begin{lstlisting}[style=java]
+public class UserRegistry {
+    private final ConcurrentHashMap<String, Short> usernames;
+    private final AtomicInteger idCounter = new AtomicInteger(1);
+
+    public short register(String username, ClientHandler handler) {
+        short newId = (short) idCounter.getAndIncrement();
+        if (usernames.putIfAbsent(username, newId) != null)
+            return -1;
+        handlers.put(newId, handler);
+        return newId;
+    }
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{putIfAbsent} atómico --- evita duplicados sin \texttt{synchronized}
+  \item \texttt{AtomicInteger} --- IDs únicos sin condición de carrera
+\end{itemize}
+\end{frame}
+
+%% =============================================================================
+\section{Cliente Desktop}
+
+\begin{frame}[fragile]{Patrón Producer-Consumer}
+\begin{lstlisting}[style=java,basicstyle=\ttfamily\tiny]
+public class SenderThread extends Thread {
+    private final BlockingQueue<QueuedMessage> queue = new LinkedBlockingQueue<>();
+
+    public void queueMessage(Message header, byte[] payload) {
+        queue.offer(new QueuedMessage(header, payload));
+    }
+
+    public void run() {
+        while (!shutdown) {
+            QueuedMessage msg = queue.take();
+            if (crypto != null && crypto.hasKeyFor(...))
+                data = crypto.encrypt(receiverId, data);
+            MessageParser.writeMessage(out, msg.header(), data);
+        }
+    }
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item GUI nunca bloquea: solo encola
+  \item Encriptación E2E transparente antes de enviar
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Encriptación Punto a Punto}
+\begin{columns}
+\column{0.55\textwidth}
+\begin{itemize}
+  \item Intercambio ECDH (secp256r1) via mensaje \texttt{DH\_EXCHANGE}
+  \item Secreto compartido $\rightarrow$ SHA-256 $\rightarrow$ clave AES-256
+  \item Cifrado AES-256/CBC con IV aleatorio
+  \item El servidor solo ve bytes cifrados
+\end{itemize}
+\column{0.45\textwidth}
+\centering
+\small
+\begin{tikzpicture}[
+  node distance=1.2cm and 1.8cm,
+  box/.style={rectangle, rounded corners=3pt, draw, minimum width=2cm,
+              minimum height=0.7cm, align=center, font=\tiny},
+  cli/.style={box, fill=green!8, draw=accentgreen},
+  srv/.style={box, fill=blue!8, draw=accentblue},
+  arr/.style={-Latex, thick, font=\tiny},
+  albl/.style={font=\tiny, sloped}
+]
+\node[cli] (A) {Cliente A};
+\node[srv] (S) at (3,0) {Servidor};
+\node[cli] (B) at (6,0) {Cliente B};
+
+\begin{scope}[yshift=1.2cm]
+  \draw[arr] (A.10) -- node[above,font=\tiny]{DH\_EXCHANGE(pubA)} (S.170);
+  \draw[arr] (S.10) -- node[above,font=\tiny]{reenvía} (B.190);
+  \draw[arr] (B.190) -- node[below,font=\tiny]{DH\_EXCHANGE(pubB)} (S.350);
+  \draw[arr] (S.170) -- node[below,font=\tiny]{reenvía} (A.350);
+\end{scope}
+
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.2cm of A] (K_A) {
+  \parbox{1.8cm}{\centering ECDH(privA, pubB)\\\ $\rightarrow$ SHA-256\\ $\rightarrow$ \textbf{K}}};
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.2cm of B] (K_B) {
+  \parbox{1.8cm}{\centering ECDH(privB, pubA)\\\ $\rightarrow$ SHA-256\\ $\rightarrow$ \textbf{K}}};
+
+\node[draw=accentblue!60, fill=blue!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.3cm of K_A] (E_A) {
+  \parbox{1.8cm}{\centering AES-256/CBC\\ mensajes cifrados}};
+\node[draw=accentblue!60, fill=blue!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.3cm of K_B] (E_B) {
+  \parbox{1.8cm}{\centering AES-256/CBC\\ mensajes cifrados}};
+
+\draw[Latex-Latex, thick, accentorange!60,
+      transform canvas={yshift=-0.1cm}] (K_A) -- node[above,font=\tiny]{misma clave K} (K_B);
+\draw[-Latex, thick, accentblue!60,
+      transform canvas={yshift=-0.05cm}] (E_A.east) -- node[above,font=\tiny]{cifrado} ++(1.5,0);
+\end{tikzpicture}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Capturas --- Cliente Desktop}
+\captura{width=0.9\textwidth}{Ventana principal de chat con mensajes de texto e imagen inline}
+
+\captura{width=0.9\textwidth}{Conversación con el nodo de ventas (flujo de pedido completado)}
+\end{frame}
+
+%% =============================================================================
+\section{Cliente Móvil Android}
+
+\begin{frame}[fragile]{Android --- Mismo Protocolo, Mismo Código}
+\begin{lstlisting}[style=kotlin]
+object MessageParser {
+    fun readHeader(input: DataInputStream): Message {
+        val payloadLen  = input.readInt()
+        val typeCode    = input.readByte().toInt() and 0xFF
+        val senderId    = input.readShort()
+        val receiverId  = input.readShort()
+        return Message(payloadLen, ...)
+    }
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{DataInputStream/OutputStream} de la JVM
+  \item Compatibilidad byte a byte con el servidor Java
+  \item Envío protegido con \texttt{synchronized(this)}
+  \item Guardado de archivos en \texttt{MediaStore} (API 30+)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Capturas --- Cliente Android}
+\captura{width=0.5\textwidth}{Pantalla de chat en dispositivo Android}
+\end{frame}
+
+%% =============================================================================
+\section{Nodo de Ventas}
+
+\begin{frame}[fragile]{Nodo de Ventas (Python)}
+\begin{itemize}
+  \item Se conecta como cliente normal, username \texttt{"ventas"}
+  \item El servidor le reenvía mensajes SALES de forma transparente
+  \item Motor NLP con similitud coseno (bag-of-words, sin librerías externas)
+  \item Máquina de estados conversacional por usuario
+\end{itemize}
+
+\begin{lstlisting}[style=python]
+class SalesNode:
+    def _authenticate(self):
+        send_message(self.sock, AUTH, 0, BROADCAST, b'ventas')
+
+    def _dispatch(self, type_code, sender_id, payload):
+        if type_code == TEXT:
+            response = self.chatbot.handle(sender_id, text)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Motor NLP --- Similitud Coseno}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\begin{lstlisting}[style=python]
+import math, re
+from collections import Counter
+
+def cosine_sim(v1, v2):
+    common = set(v1) & set(v2)
+    dot = sum(v1[k] * v2[k] for k in common)
+    mag1 = math.sqrt(sum(v*v for v in v1.values()))
+    mag2 = math.sqrt(sum(v*v for v in v2.values()))
+    return dot / (mag1 * mag2) if mag1 and mag2 else 0.0
+\end{lstlisting}
+\column{0.45\textwidth}
+\small
+\textbf{Corpus:}
+\begin{itemize}
+  \item 802 stopwords
+  \item 324 términos de productos
+  \item 172 frases en 5 intenciones
+  \item 667 tokens significativos
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Ejemplo de Conversación}
+\centering
+\small
+\begin{tabular}{p{4.5cm} p{6.4cm}}
+\toprule
+\textbf{Usuario} & \textbf{Bot (intención)} \\
+\midrule
+cuales son mis pedidos &
+  CONSULTAR, score 0.35 --- \textit{Cuál es tu ID?} \\[4pt]
+quiero registrarme &
+  REGISTRAR, score 0.62 --- \textit{Cuál es tu nombre?} \\[4pt]
+quisiera comprar croquetas &
+  PEDIDO, score 0.50 --- \textit{Numero de cliente?} \\[4pt]
+dame el reporte de ventas &
+  REPORTE, score 0.53 --- \textit{Estadísticas} \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Captura --- Nodo de Ventas}
+\captura{width=0.85\textwidth}{Consola del nodo de ventas mostrando autenticación y respuestas NLP}
+\end{frame}
+
+%% =============================================================================
+\section{Métricas de Rendimiento}
+
+\begin{frame}[fragile]{Métricas Lock-Free}
+\begin{lstlisting}[style=java]
+public class MetricsCollector {
+    private final AtomicInteger totalConnections = new AtomicInteger(0);
+    private final AtomicInteger totalMessages    = new AtomicInteger(0);
+    private final AtomicLong    totalBytes       = new AtomicLong(0);
+
+    public void recordMessage(int payloadLen) {
+        totalMessages.incrementAndGet();
+        totalBytes.addAndGet(payloadLen);
+    }
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{Atomic*} sin bloqueos --- operaciones CAS del procesador
+  \item Sin contención bajo alta concurrencia
+  \item Cliente obtiene métricas con mensaje tipo METRICS
+\end{itemize}
+\end{frame}
+
+%% =============================================================================
+\section{Clonación por QR}
+
+\begin{frame}{Clonación de Chat por QR}
+\centering
+\begin{enumerate}
+  \item Usuario A solicita token QR desde el desktop
+  \item El servidor genera UUID con TTL de 120s
+  \item Se renderiza como QR (ZXing)
+  \item Usuario B escanea el código
+  \item Servidor valida y envía el historial a B
+\end{enumerate}
+
+\vfill
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm and 2.5cm,
+  actor/.style={rectangle, rounded corners=3pt, draw, minimum width=1.8cm,
+                minimum height=0.6cm, align=center, font=\small},
+  arr/.style={-Latex, thick, font=\tiny},
+  msg/.style={font=\tiny, align=center}
+]
+\node[actor, fill=green!10, draw=accentgreen] (A) {Cliente A};
+\node[actor, fill=blue!10, draw=accentblue]   (S) at (3.5,0) {Servidor};
+\node[actor, fill=green!10, draw=accentgreen] (B) at (7,0)   {Cliente B};
+
+\draw[arr] (A.north) -- ++(0,0.3) -| node[pos=0.25,above,font=\tiny]{1. solicita token} (S.north);
+\draw[arr] (S.north) -- ++(0,0.3) -| node[pos=0.25,above,font=\tiny]{2. UUID + TTL 120s} (A.north);
+
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      font=\tiny, below=0.3cm of A] (QR) {\parbox{1.7cm}{\centering 3. Muestra\\ código QR}};
+\draw[->, thick, accentorange] (A.south) -- (QR.north);
+
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      font=\tiny, below=0.3cm of QR] (scan) {4. B escanea QR};
+\draw[->, thick, accentorange] (QR.south) -- (scan.north);
+\draw[Latex-, accentorange] (scan.east) -- ++(0.8,0) node[right,font=\tiny]{lee token};
+
+\draw[arr] (B.south) -- ++(0,-0.3) -| node[pos=0.25,below,font=\tiny]{5. envía token} (S.south);
+\draw[arr] (S.south) -- ++(0,-0.3) -| node[pos=0.25,below,font=\tiny]{6. historial de A} (B.south);
+\end{tikzpicture}
+\end{frame}
+
+%% =============================================================================
+\section{Conclusiones}
+
+\begin{frame}{Conclusiones}
+\begin{itemize}
+  \item Sistema completo usando solo sockets crudos e hilos
+  \item Protocolo binario de 9 bytes --- clave de interoperabilidad
+  \item \texttt{ConcurrentHashMap}, \texttt{AtomicInteger}, \texttt{BlockingQueue}
+        eliminan bloqueos globales
+  \item Nodo Python se integra sin modificar el servidor
+  \item Encriptación E2E sin depender del servidor
+\end{itemize}
+
+\vfill
+\centering
+\emph{Un protocolo, tres lenguajes, cero dependencias externas de comunicación}
+\end{frame}
+
+\end{document}
