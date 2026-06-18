@@ -46,9 +46,9 @@ public class SalesDialog extends JDialog {
         root.add(tabs, BorderLayout.CENTER);
 
         setContentPane(root);
-        setSize(420, 280);
+        setSize(500, 420);
         setLocationRelativeTo(parent);
-        setResizable(false);
+        setResizable(true);
     }
 
     // ── Tab 1: Registrar cliente ──────────────────────────────────────────────
@@ -232,7 +232,7 @@ public class SalesDialog extends JDialog {
         f.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(90, 94, 114), 1, true),
             new EmptyBorder(4, 8, 4, 8)));
-        f.setPreferredSize(new Dimension(340, 30));
+        f.setPreferredSize(new Dimension(420, 32));
         return f;
     }
 

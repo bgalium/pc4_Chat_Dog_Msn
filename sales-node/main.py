@@ -6,8 +6,9 @@ Concurrencia: threading.Thread para el receptor (patrón Thread-per-role)
 Flujo:
   1. Se conecta al servidor Dog Messenger como cliente con username "ventas"
   2. El servidor le asigna un user_id y lo registra en UserRegistry
-  3. Los usuarios del chat envían mensajes SALES a receiver_id = VENTAS_ID
-  4. Este nodo procesa los pedidos y responde vía TEXT al usuario solicitante
+  3. Los usuarios del chat envían TEXT directamente a este nodo (como a cualquier cliente)
+  4. El bot responde con texto libre usando una máquina de estados conversacional
+  5. También acepta sub-comandos SALES del SalesDialog para compatibilidad
 """
 
 import socket
@@ -24,6 +25,7 @@ from protocol import (
 )
 from storage      import Storage
 from sales_engine import SalesEngine
+from chatbot      import Chatbot
 
 SALES_USERNAME = "ventas"
 DEFAULT_HOST   = "localhost"
@@ -45,6 +47,7 @@ class SalesNode:
         self.sock    = None
         self.user_id = -1
         self.engine  = SalesEngine(Storage())
+        self.chatbot = Chatbot()          # bot conversacional para mensajes TEXT
         self.running = False
         self._lock   = threading.Lock()   # protege escrituras al socket
 
@@ -70,8 +73,8 @@ class SalesNode:
 
         if status != 0:
             raise RuntimeError(f"Auth rechazado: {message}")
-        print(f"[Sales] ✅ Autenticado como '{SALES_USERNAME}' → ID #{self.user_id}")
-        print(f"[Sales] Los usuarios deben enviar mensajes SALES al ID #{self.user_id}")
+        print(f"[Sales] Autenticado como '{SALES_USERNAME}' → ID #{self.user_id}")
+        print(f"[Sales] Escribe el ID #{self.user_id} en el campo 'Para' del chat para hablar con el bot.")
 
     # ── Loop principal ──────────────────────────────────────────────────────
 
@@ -112,8 +115,10 @@ class SalesNode:
         elif type_code == METRICS:
             self._handle_metrics(sender_id)
         elif type_code == TEXT:
-            text = payload.decode('utf-8', errors='replace')
-            print(f"[Sales] Mensaje de #{sender_id}: {text}")
+            text     = payload.decode('utf-8', errors='replace')
+            print(f"[Sales] #{sender_id}: {text!r}")
+            response = self.chatbot.handle(sender_id, text)
+            self._send_text(sender_id, response)
         elif type_code == ERROR:
             code = payload[0] if payload else -1
             msg  = payload[1:].decode('utf-8', errors='replace') if len(payload) > 1 else '?'
