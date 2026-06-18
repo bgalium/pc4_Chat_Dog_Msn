@@ -1,0 +1,931 @@
+%% ============================================================
+%% Informe Práctica 04 — Dog Messenger
+%% CC4P1 Programación Concurrente y Distribuida  2026-I
+%% Escuela de Ciencias de la Computación — UNI
+%% ============================================================
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{mdframed}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+\geometry{
+  top=2.5cm, bottom=2.5cm,
+  left=2.8cm, right=2.8cm,
+  headheight=14pt
+}
+
+%% ── Colores ──────────────────────────────────────────────────────────────────
+\definecolor{javabg}{RGB}{248,248,255}
+\definecolor{kotlinbg}{RGB}{248,255,248}
+\definecolor{pybg}{RGB}{255,252,240}
+\definecolor{commentcolor}{RGB}{100,120,100}
+\definecolor{keywordcolor}{RGB}{0,0,180}
+\definecolor{stringcolor}{RGB}{160,32,32}
+\definecolor{framecolor}{RGB}{180,180,200}
+\definecolor{accentblue}{RGB}{30,90,200}
+\definecolor{accentgreen}{RGB}{20,140,60}
+\definecolor{accentorange}{RGB}{200,100,0}
+
+%% ── Estilos listings ─────────────────────────────────────────────────────────
+\lstdefinestyle{java}{
+  language=Java,
+  backgroundcolor=\color{javabg},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{keywordcolor}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  numberstyle=\tiny\color{gray},
+  numbers=left, stepnumber=1,
+  breaklines=true, breakatwhitespace=true,
+  frame=single, rulecolor=\color{framecolor},
+  tabsize=4, showstringspaces=false,
+  captionpos=b,
+  morekeywords={var,val,record,sealed,permits,yield}
+}
+
+\lstdefinestyle{kotlin}{
+  language=Java,
+  backgroundcolor=\color{kotlinbg},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{accentgreen}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  numberstyle=\tiny\color{gray},
+  numbers=left, stepnumber=1,
+  breaklines=true, breakatwhitespace=true,
+  frame=single, rulecolor=\color{framecolor},
+  tabsize=4, showstringspaces=false,
+  captionpos=b,
+  morekeywords={fun,val,var,data,class,object,companion,override,suspend,launch,coroutineScope}
+}
+
+\lstdefinestyle{python}{
+  language=Python,
+  backgroundcolor=\color{pybg},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{accentorange}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  numberstyle=\tiny\color{gray},
+  numbers=left, stepnumber=1,
+  breaklines=true, breakatwhitespace=true,
+  frame=single, rulecolor=\color{framecolor},
+  tabsize=4, showstringspaces=false,
+  captionpos=b
+}
+
+%% ── Soporte UTF-8 en listings (acentos españoles) ────────────────────────────
+\lstset{
+  literate=
+    {á}{{\'{a}}}1 {é}{{\'{e}}}1 {í}{{\'{i}}}1 {ó}{{\'{o}}}1 {ú}{{\'{u}}}1
+    {Á}{{\'{A}}}1 {É}{{\'{E}}}1 {Í}{{\'{I}}}1 {Ó}{{\'{O}}}1 {Ú}{{\'{U}}}1
+    {ñ}{{\~{n}}}1 {Ñ}{{\~{N}}}1 {ü}{{\"u}}1    {Ü}{{\"U}}1
+}
+
+%% ── Cabecera / Pie ───────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CC4P1 --- Dog Messenger}
+\fancyhead[R]{\small Práctica 04 · 2026-I}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ── Secciones ────────────────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries\color{accentblue}}{}{0em}
+  {\thesection\enspace}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\color{accentblue!80}}{}{0em}
+  {\thesubsection\enspace}
+
+%% ── Recuadro de nota ─────────────────────────────────────────────────────────
+\newmdenv[
+  backgroundcolor=blue!5,
+  linecolor=accentblue,
+  linewidth=1.2pt,
+  innerleftmargin=10pt,
+  innerrightmargin=10pt,
+  innertopmargin=6pt,
+  innerbottommargin=6pt,
+  roundcorner=4pt
+]{notebox}
+
+%% =============================================================================
+\begin{document}
+
+%% ── Portada ──────────────────────────────────────────────────────────────────
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+
+{\Large \textbf{Universidad Nacional de Ingeniería}}\\[0.3cm]
+{\large Escuela de Ciencias de la Computación}\\[0.2cm]
+{\large CC4P1 --- Programación Concurrente y Distribuida}\\[0.2cm]
+{\large 2026-I}
+
+\vspace{2cm}
+\rule{\linewidth}{1.5pt}\\[0.4cm]
+{\LARGE \textbf{Dog Messenger}}\\[0.3cm]
+{\large Sistema de Mensajería Distribuida Desktop y Móvil}\\[0.2cm]
+{\large con Nodo de Ventas Automatizado}
+\rule{\linewidth}{1.5pt}
+
+\vspace{2cm}
+
+\begin{tabular}{ll}
+\textbf{Práctica:}    & 04 \\[4pt]
+\textbf{Integrantes:} & Walter Poma Navarro \\
+                      & Jesus Santa Cruz Basilio\\
+                      & Max Serrano Arostegui\\[4pt]
+\textbf{Lenguajes:}   & LP1 --- Java 17 (servidor + cliente desktop) \\
+                      & LP2 --- Kotlin / Android (cliente móvil) \\
+                      & LP3 --- Python 3.10+ (nodo de ventas) \\[4pt]
+\textbf{Fecha:}       & Junio 2026 \\
+\end{tabular}
+
+\vspace{2cm}
+{\large \textbf{Resumen}}\\[0.3cm]
+\begin{minipage}{0.85\linewidth}
+\small
+Se implementó \emph{Dog Messenger}, un sistema de mensajería en tiempo real
+para escritorio y dispositivos móviles que soporta texto, imágenes y archivos.
+El sistema emplea sockets TCP crudos, sin frameworks de comunicación,
+haciendo uso extensivo de concurrencia mediante hilos para garantizar
+alto rendimiento y ausencia de condiciones de carrera.
+Se incorporan grupos de chat, clonación por código QR,
+encriptación punto a punto (ECDH + AES-256), métricas de rendimiento
+y un nodo de ventas automatizado con procesamiento de lenguaje natural
+basado en similitud coseno.
+\end{minipage}
+
+\vfill
+
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\tableofcontents
+\newpage
+
+%% =============================================================================
+\section{Introducción}
+
+Dog Messenger es un sistema de mensajería distribuida desarrollado como
+práctica integradora del curso CC4P1. El proyecto demuestra la aplicación
+de técnicas de programación concurrente en un escenario real: múltiples
+clientes heterogéneos (Java desktop, Android/Kotlin, Python bot) conectados
+a un servidor central a través de sockets TCP binarios.
+
+El principal desafío técnico consiste en garantizar seguridad de hilos
+cuando varios clientes leen y escriben simultáneamente estructuras de datos
+compartidas, sin usar mecanismos de alto nivel como frameworks de mensajería.
+El proyecto cumple la restricción del curso: toda comunicación usa sockets
+crudos del sistema operativo, sin WebSocket, Socket.io, RabbitMQ ni similares.
+
+\subsection{Funcionalidades implementadas}
+
+\begin{itemize}[leftmargin=1.5cm]
+  \item[\checkmark] Chat en tiempo real entre clientes desktop y móvil.
+  \item[\checkmark] Transferencia de archivos e imágenes con verificación SHA-256.
+  \item[\checkmark] Grupos de chat con múltiples participantes.
+  \item[\checkmark] Clonación de historial por código QR entre dispositivos.
+  \item[\checkmark] Encriptación punto a punto (ECDH secp256r1 + AES-256/CBC).
+  \item[\checkmark] Nodo de ventas autónomo con NLP (similitud coseno, solo stdlib).
+  \item[\checkmark] Métricas de rendimiento en tiempo real.
+  \item[\checkmark] Despliegue en red LAN con múltiples nodos.
+\end{itemize}
+
+%% =============================================================================
+\section{Arquitectura del Sistema}
+
+\subsection{Visión general}
+
+La arquitectura sigue el patrón cliente-servidor centralizado (estrella).
+El servidor Java actúa como único punto de enrutamiento: los clientes no se
+comunican directamente entre sí, sino que envían mensajes al servidor y este
+los reenvía al destinatario. Esta decisión simplifica la gestión de conexiones
+y permite que el servidor contabilice métricas globales sin requerir
+coordinación entre clientes.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=1.8cm and 2.2cm,
+  box/.style={rectangle, rounded corners=4pt, draw, minimum width=2.6cm,
+              minimum height=1cm, align=center, font=\small},
+  server/.style={box, fill=blue!15, draw=accentblue, thick},
+  client/.style={box, fill=green!10, draw=accentgreen},
+  bot/.style={box, fill=orange!15, draw=accentorange},
+  arr/.style={-Latex, thick}
+]
+
+\node[server] (srv) {\textbf{Servidor}\\Java 17};
+
+\node[client, above left=of srv]  (dc1) {Desktop\\Java};
+\node[client, above right=of srv] (dc2) {Desktop\\Java};
+\node[client, below left=of srv]  (and) {Android\\Kotlin};
+\node[bot,    below right=of srv] (bot) {Nodo Ventas\\Python};
+
+\draw[arr,<->] (srv) -- (dc1) node[midway,above left,font=\tiny]{TCP};
+\draw[arr,<->] (srv) -- (dc2) node[midway,above right,font=\tiny]{TCP};
+\draw[arr,<->] (srv) -- (and) node[midway,below left,font=\tiny]{TCP};
+\draw[arr,<->] (srv) -- (bot) node[midway,below right,font=\tiny]{TCP};
+
+\end{tikzpicture}
+\caption{Arquitectura estrella: todos los nodos se conectan al servidor central.}
+\end{figure}
+
+\subsection{Patrones de concurrencia utilizados}
+
+\begin{description}[leftmargin=2.5cm,labelwidth=2.5cm]
+  \item[Thread-per-Connection] El servidor crea un \texttt{ClientHandler} que
+    extiende \texttt{Thread} por cada cliente aceptado. Permite atender
+    múltiples clientes en paralelo sin bloquear el hilo de aceptación.
+  \item[Producer-Consumer] El cliente desktop utiliza \texttt{SenderThread}
+    con una \texttt{BlockingQueue}. El hilo de la interfaz gráfica produce
+    mensajes; el hilo dedicado de envío los consume de forma ordenada, sin
+    condiciones de carrera sobre el socket.
+  \item[Thread-safe Registry] \texttt{ConcurrentHashMap} y \texttt{AtomicInteger}
+    permiten que múltiples \texttt{ClientHandler} registren y consulten usuarios
+    simultáneamente sin bloqueos explícitos.
+\end{description}
+
+%% =============================================================================
+\section{Protocolo de Comunicación Binario}
+
+\subsection{Formato del header}
+
+Todos los mensajes usan un header binario de 9 bytes en orden big-endian.
+Se eligió un protocolo binario en lugar de texto (JSON/XML) porque reduce
+el overhead de procesamiento, elimina ambigüedades de codificación y es
+compatible de forma nativa con \texttt{DataInputStream} / \texttt{DataOutputStream}
+tanto en Java como en Kotlin. En Python, el módulo \texttt{struct} permite
+leer y escribir el mismo formato con \texttt{struct.pack('>iBHH', ...)}.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{payload\_len} & \textbf{type} & \textbf{sender\_id} & \textbf{receiver\_id} \\
+4 bytes (int) & 1 byte & 2 bytes (short) & 2 bytes (short) \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Tipos de mensaje}
+
+\begin{center}
+\begin{tabular}{cll}
+\toprule
+\textbf{Código} & \textbf{Nombre} & \textbf{Descripción} \\
+\midrule
+1  & AUTH         & Autenticación (usuario hacia servidor) \\
+2  & TEXT         & Mensaje de texto unicast o broadcast \\
+3  & FILE\_START  & Inicio de transferencia (nombre + tamaño) \\
+4  & FILE\_CHUNK  & Fragmento de archivo (máx. 4096 bytes) \\
+5  & FILE\_END    & Fin de transferencia + hash SHA-256 \\
+6  & GROUP        & Operaciones de grupo (sub-comandos 0x01--0x04) \\
+7  & QR           & Generación y canje de token QR \\
+8  & SALES        & Comandos al nodo de ventas \\
+9  & METRICS      & Solicitud de métricas al servidor \\
+10 & ERROR        & Mensaje de error del servidor \\
+11 & DH\_EXCHANGE & Intercambio de clave pública Diffie-Hellman \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Implementación del parser}
+
+El \texttt{MessageParser} encapsula la lectura y escritura del protocolo.
+El método \texttt{readHeader} usa \texttt{DataInputStream.readInt()} en lugar
+de un \texttt{read(4)} manual porque TCP es un protocolo de flujo: un solo
+\texttt{read()} puede devolver menos bytes de los solicitados si el paquete
+llega fragmentado. \texttt{readInt()} llama internamente a \texttt{readFully()},
+garantizando que los 4 bytes del campo lleguen completos antes de continuar.
+
+\begin{lstlisting}[style=java, caption={MessageParser.java --- lectura y escritura del protocolo binario}]
+public class MessageParser {
+
+    // Lee exactamente el header de 9 bytes
+    public static Message readHeader(DataInputStream in) throws IOException {
+        int   payloadLen  = in.readInt();          // 4 bytes
+        int   typeCode    = in.readUnsignedByte();  // 1 byte
+        short senderId    = in.readShort();          // 2 bytes
+        short receiverId  = in.readShort();          // 2 bytes
+        return new Message(payloadLen,
+                           MessageType.fromCode(typeCode),
+                           senderId, receiverId);
+    }
+
+    // Escribe header + payload de forma atomica
+    public static void writeMessage(DataOutputStream out,
+                                    Message header,
+                                    byte[] payload) throws IOException {
+        int len = (payload != null) ? payload.length : 0;
+        out.writeInt(len);
+        out.writeByte(header.type().getCode());
+        out.writeShort(header.senderId());
+        out.writeShort(header.receiverId());
+        if (payload != null && len > 0) out.write(payload);
+        out.flush();
+    }
+}
+\end{lstlisting}
+
+%% =============================================================================
+\section{Servidor}
+
+\subsection{Bucle de aceptación}
+
+El servidor utiliza el patrón Thread-per-Connection: por cada socket aceptado
+se construye un \texttt{ClientHandler} que extiende \texttt{Thread} y se
+inicia de forma independiente. El hilo principal solo acepta conexiones y
+delega todo el procesamiento a los hilos hijos, lo que permite atender
+decenas de clientes simultáneos sin que ninguno bloquee a otro.
+
+\begin{lstlisting}[style=java, caption={Server.java --- bucle de aceptación (Thread-per-Connection)}]
+try (ServerSocket server = new ServerSocket(port)) {
+    System.out.println("[Server] Escuchando en puerto " + port);
+    while (true) {
+        Socket client = server.accept();          // bloquea hasta nueva conexion
+        MetricsCollector.getInstance().recordConnection();
+        new ClientHandler(client).start();        // nuevo hilo por cliente
+    }
+}
+\end{lstlisting}
+
+\subsection{Registro de usuarios con estructuras concurrentes}
+
+El registro de usuarios utiliza \texttt{ConcurrentHashMap} en lugar de un
+\texttt{HashMap} con \texttt{synchronized} global, porque permite operaciones
+de lectura y escritura concurrentes sobre distintas entradas sin bloquear toda
+la tabla. La generación de IDs usa \texttt{AtomicInteger.getAndIncrement()},
+que es atómica a nivel de hardware y evita la posibilidad de que dos clientes
+que se conectan al mismo tiempo reciban el mismo ID.
+
+\begin{lstlisting}[style=java, caption={UserRegistry.java --- ConcurrentHashMap + AtomicInteger}]
+public class UserRegistry {
+    // ConcurrentHashMap: lecturas/escrituras simultaneas sin sincronizacion global
+    private final ConcurrentHashMap<Short, ClientHandler> handlers  =
+                                            new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Short>        usernames =
+                                            new ConcurrentHashMap<>();
+    // AtomicInteger: IDs unicos aunque dos clientes se conecten a la vez
+    private final AtomicInteger idCounter = new AtomicInteger(1);
+
+    public short register(String username, ClientHandler handler) {
+        short newId = (short) idCounter.getAndIncrement(); // atomico
+        if (usernames.putIfAbsent(username, newId) != null)
+            return -1;  // username ya existe
+        handlers.put(newId, handler);
+        return newId;
+    }
+}
+\end{lstlisting}
+
+El método \texttt{putIfAbsent} es atómico: aunque dos hilos ejecuten
+\texttt{register} con el mismo nombre de usuario simultáneamente, solo uno
+logrará insertar el valor y el otro recibirá \texttt{-1}, evitando duplicados
+sin necesidad de un bloque \texttt{synchronized}.
+
+\subsection{Dispatch de mensajes entrantes}
+
+Cada \texttt{ClientHandler} ejecuta un bucle de lectura en su propio hilo.
+Al recibir un mensaje, el método \texttt{dispatch} lo clasifica por tipo y
+lo redirige al handler correspondiente. El envío de vuelta al cliente
+(\texttt{send}) está declarado \texttt{synchronized} para evitar que dos
+hilos distintos entrelacen bytes sobre el mismo socket de salida.
+
+\begin{lstlisting}[style=java, caption={ClientHandler.java --- dispatch según tipo de mensaje}]
+private void dispatch(Message header, byte[] payload) throws IOException {
+    MetricsCollector.getInstance().recordMessage(header.payloadLen());
+    switch (header.type()) {
+        case AUTH        -> handleAuth(payload);
+        case TEXT        -> handleText(header, payload);
+        case FILE_START,
+             FILE_CHUNK,
+             FILE_END    -> handleFile(header, payload);
+        case GROUP       -> handleGroup(header, payload);
+        case QR          -> handleQr(header, payload);
+        case SALES       -> handleSales(header, payload);
+        case METRICS     -> handleMetrics();
+        case DH_EXCHANGE -> handleDhExchange(header, payload);
+        default          -> sendError(header.senderId(), 0x01, "tipo desconocido");
+    }
+}
+
+// Envio thread-safe: synchronized evita que dos hilos entreleacen bytes
+public synchronized void send(Message header, byte[] payload) throws IOException {
+    MessageParser.writeMessage(out, header, payload);
+}
+\end{lstlisting}
+
+\subsection{Enrutamiento al nodo de ventas}
+
+El nodo de ventas se registra en el servidor como cualquier cliente con el
+nombre de usuario \texttt{"ventas"}. Cuando llega un mensaje de tipo SALES,
+el servidor busca el handler de ese usuario y reenvía el mensaje de forma
+transparente, preservando el \texttt{sender\_id} original para que el bot
+sepa a quién responder.
+
+\begin{lstlisting}[style=java, caption={ClientHandler.java --- handleSales()}]
+private void handleSales(Message header, byte[] payload) throws IOException {
+    Short ventasId = UserRegistry.getInstance().getIdByUsername("ventas");
+    if (ventasId == null) {
+        sendError(header.senderId(), 0x05, "Nodo de ventas no conectado");
+        return;
+    }
+    ClientHandler ventasHandler = UserRegistry.getInstance()
+                                              .getHandler(ventasId);
+    // Reenvio transparente: el nodo ventas ve el sender_id original
+    ventasHandler.send(header, payload);
+}
+\end{lstlisting}
+
+%% =============================================================================
+\section{Cliente Desktop}
+
+\subsection{Patrón Producer-Consumer para envío}
+
+El cliente desktop separa la interfaz gráfica del envío al socket mediante
+el patrón Producer-Consumer. El hilo de la GUI encola mensajes en una
+\texttt{LinkedBlockingQueue} sin bloquearse nunca; el \texttt{SenderThread}
+los toma de la cola y los envía en orden. Esto evita que una operación de red
+lenta congele la interfaz gráfica y garantiza que los mensajes lleguen en el
+orden en que fueron generados.
+
+\begin{lstlisting}[style=java, caption={SenderThread.java --- cola de mensajes thread-safe}]
+public class SenderThread extends Thread {
+    // BlockingQueue: el hilo de UI nunca bloquea al encolar
+    private final BlockingQueue<QueuedMessage> queue =
+                                    new LinkedBlockingQueue<>();
+
+    public void queueMessage(Message header, byte[] payload) {
+        queue.offer(new QueuedMessage(header, payload)); // no bloquea
+    }
+
+    @Override
+    public void run() {
+        while (!shutdown) {
+            QueuedMessage msg = queue.take(); // bloquea hasta haber trabajo
+            byte[] data = msg.payload();
+            // Encripta si hay clave E2E establecida para ese destinatario
+            if (crypto != null && crypto.hasKeyFor(msg.header().receiverId())) {
+                data = crypto.encrypt(msg.header().receiverId(), data);
+            }
+            MessageParser.writeMessage(out, msg.header(), data);
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Encriptación punto a punto}
+
+La encriptación extremo a extremo funciona en dos fases. Primero, los dos
+clientes intercambian sus claves públicas ECDH a través del servidor usando
+el tipo \texttt{DH\_EXCHANGE}; cada uno deriva de forma independiente el mismo
+secreto compartido (propiedad de Diffie-Hellman). Segundo, ese secreto se
+procesa con SHA-256 para obtener una clave AES-256 de 32 bytes, con la que se
+cifran los mensajes siguientes en modo CBC con IV aleatorio. El servidor solo
+ve bytes cifrados y no puede leer el contenido.
+
+\begin{lstlisting}[style=java, caption={CryptoManager.java --- intercambio de claves y cifrado}]
+public class CryptoManager {
+    private final KeyPair myKeyPair;
+    private final Map<Short, SecretKey> sharedKeys = new ConcurrentHashMap<>();
+
+    public CryptoManager() throws GeneralSecurityException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
+        kpg.initialize(new ECGenParameterSpec("secp256r1")); // curva NIST P-256
+        myKeyPair = kpg.generateKeyPair();
+    }
+
+    // Calcula secreto compartido con Diffie-Hellman sobre curva eliptica
+    public void computeSharedKey(short peerId, byte[] peerPublicKeyBytes)
+            throws GeneralSecurityException {
+        KeyFactory kf = KeyFactory.getInstance("EC");
+        PublicKey peerPub = kf.generatePublic(
+                new X509EncodedKeySpec(peerPublicKeyBytes));
+        KeyAgreement ka = KeyAgreement.getInstance("ECDH");
+        ka.init(myKeyPair.getPrivate());
+        ka.doPhase(peerPub, true);
+        byte[] secret = ka.generateSecret();
+        // Deriva clave AES-256 del secreto compartido
+        byte[] keyBytes = MessageDigest.getInstance("SHA-256").digest(secret);
+        sharedKeys.put(peerId, new SecretKeySpec(keyBytes, "AES"));
+    }
+
+    // Cifra con AES-256/CBC; payload = IV(16B) || ciphertext
+    public byte[] encrypt(short peerId, byte[] plaintext) throws Exception {
+        SecretKey key = sharedKeys.get(peerId);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, key);  // genera IV aleatorio
+        byte[] iv  = cipher.getIV();
+        byte[] ct  = cipher.doFinal(plaintext);
+        byte[] out = new byte[16 + ct.length];
+        System.arraycopy(iv, 0, out, 0, 16);
+        System.arraycopy(ct, 0, out, 16, ct.length);
+        return out;
+    }
+}
+\end{lstlisting}
+
+\subsection{Visualización de imágenes inline}
+
+El log de chat usa \texttt{JTextPane} en lugar de \texttt{JTextArea} porque
+\texttt{JTextPane} permite insertar componentes Swing arbitrarios mediante
+\texttt{insertComponent()}. Cuando llega la transferencia completa de un
+archivo de imagen, el cliente lo detecta por extensión y construye un
+\texttt{JLabel} con el \texttt{ImageIcon} escalado a un máximo de 300 px de
+ancho, que inserta directamente en el panel de chat.
+
+\begin{lstlisting}[style=java, caption={ChatFrame.java --- detección y renderizado de imágenes recibidas}]
+// Al completar FILE_END, comprueba si es imagen por extension
+case FILE_END -> {
+    byte[] fileBytes = activeDownloadStream.toByteArray();
+    Files.write(dest.toPath(), fileBytes);
+    if (isImage(activeDownloadFilename)) {
+        appendLog("[imagen de #" + h.senderId() + "]");
+        appendImage(fileBytes);
+    } else {
+        appendLog("[archivo] " + activeDownloadFilename + " guardado.");
+    }
+}
+
+private void appendImage(byte[] imageBytes) {
+    ImageIcon raw = new ImageIcon(imageBytes);
+    int w = Math.min(raw.getIconWidth(), 300); // maximo 300px de ancho
+    int h = (int)(raw.getIconHeight() * ((double) w / raw.getIconWidth()));
+    Image scaled = raw.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+    JLabel imgLabel = new JLabel(new ImageIcon(scaled));
+    txtChatLog.insertComponent(imgLabel); // JTextPane permite componentes inline
+    appendLog("");
+}
+
+private static boolean isImage(String filename) {
+    String lo = filename.toLowerCase();
+    return lo.endsWith(".png") || lo.endsWith(".jpg") || lo.endsWith(".jpeg")
+        || lo.endsWith(".gif") || lo.endsWith(".bmp");
+}
+\end{lstlisting}
+
+\subsection{Capturas del software}
+
+A continuación se muestran capturas de pantalla del cliente desktop en
+ejecución.
+
+\begin{figure}[H]
+\centering
+\fbox{\rule{0pt}{5cm}\hspace{12cm}}
+\caption{Ventana principal de chat con mensajes de texto e imagen inline.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\rule{0pt}{5cm}\hspace{12cm}}
+\caption{Diálogo del nodo de ventas con flujo de pedido completado.}
+\end{figure}
+
+%% =============================================================================
+\section{Cliente Móvil Android}
+
+\subsection{Compatibilidad de protocolo}
+
+El cliente Android implementa exactamente el mismo protocolo de 9 bytes que
+el servidor Java. No se reescribió el protocolo: se usó \texttt{DataInputStream}
+y \texttt{DataOutputStream} de la JVM con las mismas llamadas que en Java, lo
+que garantiza compatibilidad byte a byte sin conversiones adicionales.
+
+\begin{lstlisting}[style=kotlin, caption={MessageParser.kt --- mismo protocolo en Kotlin}]
+object MessageParser {
+    fun readHeader(input: DataInputStream): Message {
+        val payloadLen  = input.readInt()              // 4 bytes
+        val typeCode    = input.readByte().toInt() and 0xFF
+        val senderId    = input.readShort()
+        val receiverId  = input.readShort()
+        return Message(payloadLen,
+                       MessageType.fromCode(typeCode),
+                       senderId, receiverId)
+    }
+
+    fun writeMessage(output: DataOutputStream,
+                     header: Message,
+                     payload: ByteArray?) {
+        output.writeInt(payload?.size ?: 0)
+        output.writeByte(header.type.code)
+        output.writeShort(header.senderId.toInt())
+        output.writeShort(header.receiverId.toInt())
+        payload?.let { output.write(it) }
+        output.flush()
+    }
+}
+\end{lstlisting}
+
+\subsection{Envío thread-safe en Android}
+
+Android no tiene \texttt{BlockingQueue} en su API de UI, pero sí permite
+usar \texttt{Thread} de Java. El envío de mensajes se protege con
+\texttt{synchronized(this)} sobre la conexión, que es suficiente para
+garantizar que dos hilos no entrelacen bytes sobre el mismo
+\texttt{DataOutputStream}.
+
+\begin{lstlisting}[style=kotlin, caption={Connection.kt --- synchronized para escritura al socket}]
+private fun sendMessage(header: Message, payload: ByteArray) {
+    Thread {
+        synchronized(this) {
+            // synchronized garantiza que solo un Thread escribe a la vez
+            output?.let { MessageParser.writeMessage(it, header, payload) }
+        }
+    }.start()
+}
+
+// Ejemplo: enviar mensaje de grupo
+fun sendGroupMessage(groupId: Short, message: String) {
+    val gidBytes = ByteBuffer.allocate(2)
+                             .putShort(groupId).array()
+    val msgBytes = message.toByteArray(Charsets.UTF_8)
+    val payload  = byteArrayOf(0x03) + gidBytes + msgBytes
+    sendMessage(Message(payload.size, MessageType.GROUP,
+                        userId, 0xFFFF.toShort()), payload)
+}
+\end{lstlisting}
+
+\subsection{Funcionalidades implementadas en Android}
+
+\begin{itemize}
+  \item Autenticación con nombre de usuario y asignación de ID por el servidor.
+  \item Chat de texto unicast y broadcast.
+  \item Transferencia de archivos con verificación SHA-256.
+  \item Grupos: crear, unirse, enviar y listar.
+  \item QR: generar token, canjear token de otro dispositivo.
+  \item Métricas del servidor.
+  \item Guardado de archivos en \texttt{MediaStore} (Android API 30+).
+\end{itemize}
+
+%% =============================================================================
+\section{Nodo de Ventas}
+
+\subsection{Integración como cliente del servidor}
+
+El nodo de ventas no requiere un protocolo separado ni un puerto distinto.
+Se conecta al servidor exactamente igual que cualquier cliente de chat,
+se autentica con el nombre de usuario \texttt{"ventas"} y queda registrado
+en el \texttt{UserRegistry}. Cualquier usuario del chat puede enviarle
+mensajes de texto escribiendo su ID en el campo \emph{Para}. Esta decisión
+evita añadir lógica especial al servidor y reutiliza toda la infraestructura
+de enrutamiento existente.
+
+\begin{lstlisting}[style=python, caption={main.py --- autenticación y dispatch del nodo}]
+class SalesNode:
+    def _authenticate(self):
+        # Se autentica como cualquier usuario normal
+        send_message(self.sock, AUTH, 0, BROADCAST, b'ventas')
+
+        type_code, _, _, resp = read_message(self.sock)
+        self.user_id = (resp[1] << 8) | resp[2]
+        print(f"[Sales] Autenticado. ID: #{self.user_id}")
+        print(f"[Sales] Escribe el ID #{self.user_id} en 'Para' para chatear")
+
+    def _dispatch(self, type_code, sender_id, payload):
+        if type_code == TEXT:
+            # Mensajes de texto: responde el chatbot NLP
+            text     = payload.decode('utf-8', errors='replace')
+            response = self.chatbot.handle(sender_id, text)
+            self._send_text(sender_id, response)
+        elif type_code == SALES:
+            # Sub-comandos estructurados del SalesDialog
+            self._handle_sales(sender_id, payload)
+\end{lstlisting}
+
+\subsection{Motor NLP con similitud coseno}
+
+Para detectar la intención del usuario sin librerías externas se implementó
+similitud coseno sobre vectores bag-of-words. Cada mensaje se tokeniza
+(eliminación de stopwords, normalización de acentos, conversión de dígitos a
+un token \texttt{NUM}), y el vector resultante se compara con un índice
+precalculado al arrancar: un \texttt{Counter} agregado de todas las frases
+de entrenamiento por intención. La similitud coseno entre dos vectores es
+el coseno del ángulo que forman, lo que mide cuánto vocabulario comparten
+proporcionalmente. Se eligió este método porque no requiere entrenamiento
+iterativo, es determinista y funciona con la stdlib de Python (\texttt{math},
+\texttt{re}, \texttt{collections}).
+
+\begin{lstlisting}[style=python, caption={nlp.py --- similitud coseno con bag-of-words}]
+import math, re
+from collections import Counter
+from corpus import STOPWORDS, INTENTS
+
+# Normaliza acentos: "pedicion" -> sin tildes
+_ACCENT_MAP = str.maketrans('áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN')
+
+def tokenize(text: str) -> list:
+    text = text.translate(_ACCENT_MAP).lower()
+    text = re.sub(r'[^\w\s]', ' ', text)
+    text = re.sub(r'\d+', ' NUM ', text)
+    return [t for t in text.split()
+            if len(t) > 1 and t not in STOPWORDS]
+
+def cosine_sim(v1: Counter, v2: Counter) -> float:
+    common = set(v1) & set(v2)
+    dot    = sum(v1[k] * v2[k] for k in common)
+    mag1   = math.sqrt(sum(v*v for v in v1.values()))
+    mag2   = math.sqrt(sum(v*v for v in v2.values()))
+    return dot / (mag1 * mag2) if mag1 and mag2 else 0.0
+
+# Indice precalculado al arrancar: {intent: Counter_agregado}
+_INTENT_INDEX = {
+    intent: sum((Counter(tokenize(p)) for p in phrases), Counter())
+    for intent, phrases in INTENTS.items()
+}
+
+def detect_intent(text: str, threshold=0.10):
+    user_vec = Counter(tokenize(text))
+    scores   = [(i, cosine_sim(user_vec, v))
+                for i, v in _INTENT_INDEX.items()]
+    best     = max(scores, key=lambda x: x[1])
+    return best if best[1] >= threshold else ('DESCONOCIDO', 0.0)
+\end{lstlisting}
+
+\subsection{Corpus de entrenamiento}
+
+El corpus se orienta a una tienda de mascotas (\emph{Dog Messenger Store})
+para coherencia con el nombre del sistema. Incluye 802 stopwords (288
+base + 514 del proyecto \texttt{stopwords-iso}) cargadas desde un archivo
+de texto plano, sin librerías adicionales. Las palabras clave operativas
+como \texttt{pedido} o \texttt{registrar} fueron excluidas explícitamente
+de las stopwords para que lleguen al motor NLP sin filtrarse.
+
+\begin{itemize}
+  \item 802 stopwords en total.
+  \item 324 términos de productos (alimentos, accesorios, higiene, salud).
+  \item 172 frases de entrenamiento en 5 intenciones: REGISTRAR, PEDIDO,
+    CONSULTAR, REPORTE, AYUDA.
+  \item 667 tokens significativos en el índice.
+\end{itemize}
+
+\subsection{Máquina de estados conversacional}
+
+El chatbot mantiene el estado de conversación por usuario en un diccionario
+protegido por \texttt{threading.Lock}, ya que el nodo puede atender mensajes
+de múltiples usuarios concurrentes. Cada usuario tiene su propio objeto
+\texttt{\_State} con el paso actual del flujo (registro, pedido, consulta)
+y los datos temporales acumulados entre turnos.
+
+El método \texttt{\_idle} evalúa el mensaje en capas: primero palabras clave
+exactas que el NLP confundiría (dígitos del menú, términos como
+\texttt{"pedido"} que aparecen en varios corpora); luego el motor NLP para
+frases largas de lenguaje libre.
+
+\begin{lstlisting}[style=python, caption={chatbot.py --- maquina de estados + NLP}]
+class Chatbot:
+    def _idle(self, st, text, lo):
+        # 1) Greetings directos (vectores de 1 token son muy debiles)
+        if set(lo.split()) <= _GREET_TOKENS:
+            return MENU_TEXT
+
+        # 2) Opciones numericas del menu
+        if lo == '1': st.step = 'REG_NAME';  return REGISTRO_MSG
+        if lo in ('2', 'pedido', 'comprar'): st.step = 'ORD_CID'; return PEDIDO_MSG
+        if lo in ('3', 'consultar'):         st.step = 'QRY_CID'; return CONSULTA_MSG
+        if lo in ('4', 'reporte'):           return self._report()
+
+        # 3) NLP coseno para lenguaje libre (frases largas)
+        intent, score = detect_intent(text)
+        if   intent == 'REGISTRAR': st.step = 'REG_NAME';  return REGISTRO_MSG
+        elif intent == 'PEDIDO':    st.step = 'ORD_CID';   return PEDIDO_MSG
+        elif intent == 'CONSULTAR': st.step = 'QRY_CID';   return CONSULTA_MSG
+        elif intent == 'REPORTE':   return self._report()
+        elif intent == 'AYUDA':     return MENU_TEXT
+
+        return random.choice(RESPONSES_NO_ENTENDIDO)
+\end{lstlisting}
+
+\subsection{Ejemplo de conversación}
+
+\begin{center}
+\small
+\begin{tabular}{p{5.2cm} p{7.4cm}}
+\toprule
+\textbf{Usuario} & \textbf{Bot (intención detectada)} \\
+\midrule
+cuales son mis pedidos de musica &
+  CONSULTAR (score=0.35) --- \textit{Cual es tu ID de cliente?} \\[4pt]
+quiero registrarme &
+  REGISTRAR (score=0.62) --- \textit{Cual es tu nombre completo?} \\[4pt]
+quisiera comprar croquetas &
+  PEDIDO (score=0.50) --- \textit{Tu numero de cliente?} \\[4pt]
+dame el reporte de ventas &
+  REPORTE (score=0.53) --- \textit{Muestra estadísticas} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%% =============================================================================
+\section{Métricas de Rendimiento}
+
+El \texttt{MetricsCollector} registra uptime, conexiones totales, mensajes
+procesados y bytes transferidos. Usa \texttt{AtomicInteger} y \texttt{AtomicLong}
+en lugar de variables protegidas con \texttt{synchronized} porque las
+instrucciones CAS (Compare-And-Swap) que utilizan internamente son operaciones
+atómicas del procesador: no necesitan adquirir un monitor y por lo tanto no
+generan contención cuando muchos hilos actualizan el contador al mismo tiempo.
+El cliente obtiene las métricas enviando un mensaje tipo METRICS al servidor.
+
+\begin{lstlisting}[style=java, caption={MetricsCollector.java --- contadores lock-free}]
+public class MetricsCollector {
+    private final long          startTime        = System.currentTimeMillis();
+    private final AtomicInteger totalConnections = new AtomicInteger(0);
+    private final AtomicInteger totalMessages    = new AtomicInteger(0);
+    private final AtomicLong    totalBytes       = new AtomicLong(0);
+
+    public void recordMessage(int payloadLen) {
+        totalMessages.incrementAndGet();
+        totalBytes.addAndGet(payloadLen);
+    }
+
+    public String toJson() {
+        long uptime = (System.currentTimeMillis() - startTime) / 1000;
+        return String.format(
+            "{\"uptime_s\":%d,\"online\":%d,\"mensajes\":%d,\"bytes\":%d}",
+            uptime,
+            UserRegistry.getInstance().getOnlineCount(),
+            totalMessages.get(),
+            totalBytes.get()
+        );
+    }
+}
+\end{lstlisting}
+
+%% =============================================================================
+\section{Clonación de Chat por QR}
+
+La clonación por QR permite que un usuario transfiera su historial de chat
+a otro dispositivo sin necesitar una cuenta externa. El flujo es el siguiente:
+
+\begin{enumerate}
+  \item El usuario A solicita un token QR desde el cliente desktop.
+  \item El servidor genera un UUID con TTL de 120 segundos y lo almacena
+    en \texttt{QrTokenStore}.
+  \item El token se envía al cliente A y se renderiza como imagen QR usando
+    la librería ZXing.
+  \item El usuario B escanea o introduce el token en su cliente.
+  \item El servidor valida el token, recupera el historial de A y lo envía a B.
+\end{enumerate}
+
+El TTL de 120 segundos se eligió para que el código QR sea válido durante
+el tiempo razonable de un escaneo sin que quede abierto indefinidamente.
+El token se elimina en cuanto se canjea (\texttt{tokens.remove}) para evitar
+reutilización.
+
+\begin{lstlisting}[style=java, caption={QrTokenStore.java --- tokens con TTL de 120s}]
+public String generate(short userId) {
+    String token = UUID.randomUUID().toString();
+    tokens.put(token, new Entry(userId,
+                                System.currentTimeMillis() + 120_000));
+    return token;
+}
+
+public short redeem(String token) {
+    Entry entry = tokens.remove(token);
+    if (entry == null || System.currentTimeMillis() > entry.expiresAt())
+        return -1;   // expirado o no existe
+    return entry.userId();
+}
+\end{lstlisting}
+
+%% =============================================================================
+\section{Conclusiones}
+
+Dog Messenger demuestra que es posible construir un sistema de mensajería
+distribuido completo usando únicamente los primitivos básicos de cada
+lenguaje: sockets crudos e hilos, sin frameworks de comunicación.
+
+La separación entre el protocolo binario y los lenguajes clientes resultó
+clave para la interoperabilidad: Java, Kotlin y Python interactúan sin
+adaptadores porque todos leen y escriben el mismo header de 9 bytes.
+Las estructuras concurrentes de Java (\texttt{ConcurrentHashMap},
+\texttt{AtomicInteger}, \texttt{BlockingQueue}) permitieron eliminar
+bloqueos globales y garantizar consistencia bajo carga sin sacrificar
+rendimiento.
+
+El nodo de ventas en Python ilustra cómo un tercer lenguaje puede integrarse
+al sistema sin modificar el servidor, simplemente respetando el contrato
+del protocolo.
+
+\end{document}

@@ -10,7 +10,12 @@ import uni.cc4p1.client.model.MessageType;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -32,7 +37,7 @@ public class ChatFrame extends JFrame {
     private ReceiverThread      receiver;   // no final: se asigna después de los lambdas
     private SenderThread        sender;
 
-    private final JTextArea  txtChatLog;
+    private final JTextPane  txtChatLog;
     private final JTextField txtInput;
     private final JTextField txtRecipient;
     private final JButton    btnAttach;
@@ -98,13 +103,11 @@ public class ChatFrame extends JFrame {
         contentPane.add(headerPanel, BorderLayout.NORTH);
 
         // ── Chat log ──────────────────────────────────────────────────────
-        txtChatLog = new JTextArea();
+        txtChatLog = new JTextPane();
         txtChatLog.setBackground(cardColor);
         txtChatLog.setForeground(fgColor);
         txtChatLog.setFont(logFont);
         txtChatLog.setEditable(false);
-        txtChatLog.setLineWrap(true);
-        txtChatLog.setWrapStyleWord(true);
         txtChatLog.setBorder(new EmptyBorder(10, 10, 10, 10));
         JScrollPane scroll = new JScrollPane(txtChatLog);
         scroll.setBorder(BorderFactory.createLineBorder(new Color(60, 64, 84), 1, true));
@@ -207,20 +210,29 @@ public class ChatFrame extends JFrame {
                         t, activeDownloadFilename, sz, h.senderId()));
             }
             case FILE_CHUNK -> {
-                txtChatLog.append(".");
+                appendRaw(".");
                 if (activeDownloadStream != null && p != null)
                     activeDownloadStream.write(p, 0, p.length);
             }
             case FILE_END -> {
-                String sha = p != null ? new String(p, StandardCharsets.US_ASCII) : "";
-                appendLog(String.format("\n[%s] [ARCHIVO] Completo. SHA-256: %s", t, sha));
                 if (activeDownloadStream != null && activeDownloadFilename != null) {
+                    byte[] fileBytes = activeDownloadStream.toByteArray();
                     File dir = new File("downloads");
                     if (!dir.exists()) dir.mkdir();
                     File dest = new File(dir, "recv_" + activeDownloadFilename);
-                    Files.write(dest.toPath(), activeDownloadStream.toByteArray());
-                    appendLog("[SISTEMA] Guardado: " + dest.getAbsolutePath());
-                    activeDownloadStream = null; activeDownloadFilename = null;
+                    Files.write(dest.toPath(), fileBytes);
+                    if (isImage(activeDownloadFilename)) {
+                        appendLog(String.format("\n[%s] 📷 Imagen de #%d: %s",
+                                t, h.senderId(), activeDownloadFilename));
+                        appendImage(fileBytes);
+                    } else {
+                        String sha = p != null ? new String(p, StandardCharsets.US_ASCII) : "";
+                        appendLog(String.format("\n[%s] [ARCHIVO] %s — SHA-256: %s",
+                                t, activeDownloadFilename, sha));
+                        appendLog("[SISTEMA] Guardado: " + dest.getAbsolutePath());
+                    }
+                    activeDownloadStream = null;
+                    activeDownloadFilename = null;
                 }
             }
             case GROUP -> {
@@ -364,7 +376,7 @@ public class ChatFrame extends JFrame {
                     System.arraycopy(bytes, off, chunk, 0, len);
                     sender.queueMessage(new Message(len, MessageType.FILE_CHUNK, localUserId, recId), chunk);
                     off += len; n++;
-                    if (n % 5 == 0) SwingUtilities.invokeLater(() -> txtChatLog.append("."));
+                    if (n % 5 == 0) SwingUtilities.invokeLater(() -> appendRaw("."));
                 }
                 MessageDigest md = MessageDigest.getInstance("SHA-256");
                 StringBuilder sb = new StringBuilder();
@@ -395,8 +407,42 @@ public class ChatFrame extends JFrame {
     }
 
     private void appendLog(String msg) {
-        txtChatLog.append(msg + "\n");
-        txtChatLog.setCaretPosition(txtChatLog.getDocument().getLength());
+        appendRaw(msg + "\n");
+    }
+
+    private void appendRaw(String text) {
+        try {
+            StyledDocument doc = txtChatLog.getStyledDocument();
+            SimpleAttributeSet attrs = new SimpleAttributeSet();
+            StyleConstants.setForeground(attrs, txtChatLog.getForeground());
+            StyleConstants.setFontFamily(attrs, txtChatLog.getFont().getFamily());
+            StyleConstants.setFontSize(attrs, txtChatLog.getFont().getSize());
+            doc.insertString(doc.getLength(), text, attrs);
+            txtChatLog.setCaretPosition(doc.getLength());
+        } catch (BadLocationException ignored) {}
+    }
+
+    private void appendImage(byte[] imageBytes) {
+        try {
+            ImageIcon raw    = new ImageIcon(imageBytes);
+            int maxW = 300;
+            int w    = Math.min(raw.getIconWidth(), maxW);
+            int h    = (int)(raw.getIconHeight() * ((double) w / Math.max(raw.getIconWidth(), 1)));
+            Image scaled     = raw.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+            JLabel imgLabel  = new JLabel(new ImageIcon(scaled));
+            imgLabel.setBorder(new EmptyBorder(6, 6, 6, 6));
+            txtChatLog.insertComponent(imgLabel);
+            appendLog("");   // salto de línea después de la imagen
+        } catch (Exception e) {
+            appendLog("[ERROR] No se pudo mostrar imagen: " + e.getMessage());
+        }
+    }
+
+    private static boolean isImage(String filename) {
+        if (filename == null) return false;
+        String lo = filename.toLowerCase();
+        return lo.endsWith(".png") || lo.endsWith(".jpg") || lo.endsWith(".jpeg")
+            || lo.endsWith(".gif") || lo.endsWith(".bmp") || lo.endsWith(".webp");
     }
 
     private String prettyJson(String json) {
