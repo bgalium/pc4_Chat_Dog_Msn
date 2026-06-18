@@ -1,4 +1,4 @@
-%% ============================================================
+ %% ============================================================
 %% Diapositivas Práctica 04 — Dog Messenger
 %% CC4P1 Programación Concurrente y Distribuida  2026-I
 %% Escuela de Ciencias de la Computación — UNI
@@ -48,6 +48,7 @@
   breaklines=true, breakatwhitespace=true,
   frame=single, rulecolor=\color{framecolor},
   tabsize=2, showstringspaces=false,
+  columns=fullflexible,
   morekeywords={var,val,record,sealed,permits,yield}
 }
 
@@ -61,6 +62,7 @@
   breaklines=true, breakatwhitespace=true,
   frame=single, rulecolor=\color{framecolor},
   tabsize=2, showstringspaces=false,
+  columns=fullflexible,
   morekeywords={fun,val,var,data,class,object,companion,override,suspend,launch,coroutineScope}
 }
 
@@ -73,7 +75,8 @@
   stringstyle=\color{stringcolor},
   breaklines=true, breakatwhitespace=true,
   frame=single, rulecolor=\color{framecolor},
-  tabsize=2, showstringspaces=false
+  tabsize=2, showstringspaces=false,
+  columns=fullflexible
 }
 
 \lstset{
@@ -85,37 +88,55 @@
 
 %% ── Comandos auxiliares ──────────────────────────────────────────────────────
 \newcommand{\captura}[2]{
-  \begin{figure}
+  \begin{figure}[t]
     \centering
     \fcolorbox{gray}{white}{\begin{minipage}{0.85\textwidth}
       \centering
-      \vspace{3cm}
+      \vspace{0.35cm}
       {\Large \color{gray!60} [Captura: #2]}
-      \vspace{3cm}
+      \vspace{0.35cm}
     \end{minipage}}
-    \caption{#2}
   \end{figure}
 }
 
-\newcommand{\nododiagram}[2]{
-  \begin{figure}
-    \centering
-    \fcolorbox{gray}{white}{\begin{minipage}{0.7\textwidth}
-      \centering
-      \vspace{2.5cm}
-      {\Large \color{gray!60} [Diagrama: #2]}
-      \vspace{2.5cm}
-    \end{minipage}}
-    \caption{#2}
-  \end{figure}
-}
+
 
 %% =============================================================================
 \begin{document}
 
 %% ── Portada ──────────────────────────────────────────────────────────────────
 \begin{frame}
-\titlepage
+\centering
+\vspace*{0.3cm}
+
+{\Large \textbf{Universidad Nacional de Ingeniería}}\\[0.2cm]
+{\large Escuela de Ciencias de la Computación}\\[0.1cm]
+{\large CC4P1 --- Programación Concurrente y Distribuida}\\[0.1cm]
+{\large 2026-I}
+
+\vspace{0.8cm}
+\rule{\linewidth}{1.5pt}\\[0.3cm]
+{\LARGE \textbf{Dog Messenger}}\\[0.2cm]
+{\large Sistema de Mensajería Distribuida Desktop y Móvil}\\[0.1cm]
+{\large con Nodo de Ventas Automatizado}
+\rule{\linewidth}{1.5pt}
+
+\vspace{0.6cm}
+
+\begin{tabular}{ll}
+\textbf{Práctica:}    & 04 \\[4pt]
+\textbf{Integrantes:} & Walter Poma Navarro \\
+                      & Jesus Santa Cruz Basilio\\
+                      & Max Serrano Arostegui\\[4pt]
+\textbf{Lenguajes:}   & LP1 --- Java 17 (servidor + cliente desktop) \\
+                      & LP2 --- Kotlin / Android (cliente móvil) \\
+                      & LP3 --- Python 3.10+ (nodo de ventas) \\[4pt]
+\textbf{Fecha:}       & Junio 2026 \\
+\end{tabular}
+
+\vfill
+\small
+\textit{Práctica 04 --- CC4P1}
 \end{frame}
 
 %% ── Índice ───────────────────────────────────────────────────────────────────
@@ -169,7 +190,7 @@
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Patrones de Concurrencia}
+\begin{frame}[shrink=10]{Patrones de Concurrencia}
 \begin{description}
   \item[Thread-per-Connection] \hfill \\
     Cada cliente ejecuta su propio \texttt{ClientHandler} en un hilo separado.
@@ -180,7 +201,37 @@
 \end{description}
 
 \vfill
-\nododiagram{width=0.6\textwidth}{Flujo de hilos en el servidor}
+\centering
+\begin{tikzpicture}[
+  node distance=0.8cm and 1.2cm,
+  thr/.style={rectangle, rounded corners=3pt, draw, minimum width=3.8cm,
+              minimum height=0.6cm, align=center, font=\scriptsize},
+  srv/.style={thr, fill=blue!10, draw=accentblue},
+  hnd/.style={thr, fill=green!8, draw=accentgreen},
+  arr/.style={-Latex, thick},
+  arrd/.style={-Latex, thick, dashed}
+]
+\node[srv] (main) {\texttt{main()} --- \texttt{while(true) \{ accept(); \}}};
+\node[hnd, below left=of main] (h1) {\texttt{ClientHandler-1}};
+\node[hnd, below=of main]      (h2) {\texttt{ClientHandler-2}};
+\node[hnd, below right=of main](h3) {\texttt{ClientHandler-3}};
+
+\draw[arr] (main.south) -- ++(0,-0.25) -| (h1.north);
+\draw[arr] (main.south) -- ++(0,-0.25) -- (h2.north);
+\draw[arr] (main.south) -- ++(0,-0.25) -| (h3.north);
+
+\node[hnd, below=of h2, yshift=-0.6cm] (loop) {
+  \parbox{3.6cm}{\centering
+  \texttt{readLoop()} $\rightarrow$ \texttt{dispatch()}\\
+  $\downarrow$\\
+  \texttt{handleAuth / Text / File / Group / ...}\\
+  $\downarrow$\\
+  \texttt{send() (synchronized)}}
+};
+\draw[arrd] (h2.south) -- (loop.north);
+\node[fit=(h1)(h3)(loop), inner sep=2pt, draw=gray!40, dashed,
+      label={[font=\tiny,gray]below:Tres hilos ejecutándose en paralelo}] {};
+\end{tikzpicture}
 \end{frame}
 
 %% =============================================================================
@@ -213,10 +264,26 @@
 \begin{columns}[T]
 \column{0.33\textwidth}
 \centering{\textbf{Java}}
-\lstinputlisting[style=java,firstline=326,lastline=334]{informe.tex}
+\begin{lstlisting}[style=java]
+int payloadLen = in.readInt();
+byte type = in.readByte();
+short senderId = in.readShort();
+short receiverId = in.readShort();
+Message msg = new Message(
+    payloadLen, type,
+    senderId, receiverId);
+\end{lstlisting}
 \column{0.33\textwidth}
 \centering{\textbf{Kotlin}}
-\lstinputlisting[style=kotlin,firstline=617,lastline=625]{informe.tex}
+\begin{lstlisting}[style=kotlin]
+val payloadLen = input.readInt()
+val typeCode = input.readByte()
+val senderId = input.readShort()
+val receiverId = input.readShort()
+return Message(
+    payloadLen, typeCode,
+    senderId, receiverId)
+\end{lstlisting}
 \column{0.33\textwidth}
 \centering{\textbf{Python}}
 \begin{lstlisting}[style=python]
@@ -282,10 +349,9 @@ public class UserRegistry {
 \section{Cliente Desktop}
 
 \begin{frame}[fragile]{Patrón Producer-Consumer}
-\begin{lstlisting}[style=java]
+\begin{lstlisting}[style=java,basicstyle=\ttfamily\tiny]
 public class SenderThread extends Thread {
-    private final BlockingQueue<QueuedMessage> queue =
-                                    new LinkedBlockingQueue<>();
+    private final BlockingQueue<QueuedMessage> queue = new LinkedBlockingQueue<>();
 
     public void queueMessage(Message header, byte[] payload) {
         queue.offer(new QueuedMessage(header, payload));
@@ -320,7 +386,45 @@ public class SenderThread extends Thread {
 \column{0.45\textwidth}
 \centering
 \small
-\includegraphics[width=\textwidth]{placeholder-e2e.png}
+\begin{tikzpicture}[
+  node distance=1.2cm and 1.8cm,
+  box/.style={rectangle, rounded corners=3pt, draw, minimum width=2cm,
+              minimum height=0.7cm, align=center, font=\tiny},
+  cli/.style={box, fill=green!8, draw=accentgreen},
+  srv/.style={box, fill=blue!8, draw=accentblue},
+  arr/.style={-Latex, thick, font=\tiny},
+  albl/.style={font=\tiny, sloped}
+]
+\node[cli] (A) {Cliente A};
+\node[srv] (S) at (3,0) {Servidor};
+\node[cli] (B) at (6,0) {Cliente B};
+
+\begin{scope}[yshift=1.2cm]
+  \draw[arr] (A.10) -- node[above,font=\tiny]{DH\_EXCHANGE(pubA)} (S.170);
+  \draw[arr] (S.10) -- node[above,font=\tiny]{reenvía} (B.190);
+  \draw[arr] (B.190) -- node[below,font=\tiny]{DH\_EXCHANGE(pubB)} (S.350);
+  \draw[arr] (S.170) -- node[below,font=\tiny]{reenvía} (A.350);
+\end{scope}
+
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.2cm of A] (K_A) {
+  \parbox{1.8cm}{\centering ECDH(privA, pubB)\\\ $\rightarrow$ SHA-256\\ $\rightarrow$ \textbf{K}}};
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.2cm of B] (K_B) {
+  \parbox{1.8cm}{\centering ECDH(privB, pubA)\\\ $\rightarrow$ SHA-256\\ $\rightarrow$ \textbf{K}}};
+
+\node[draw=accentblue!60, fill=blue!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.3cm of K_A] (E_A) {
+  \parbox{1.8cm}{\centering AES-256/CBC\\ mensajes cifrados}};
+\node[draw=accentblue!60, fill=blue!5, rounded corners=2pt,
+      inner sep=3pt, font=\tiny, below=0.3cm of K_B] (E_B) {
+  \parbox{1.8cm}{\centering AES-256/CBC\\ mensajes cifrados}};
+
+\draw[Latex-Latex, thick, accentorange!60,
+      transform canvas={yshift=-0.1cm}] (K_A) -- node[above,font=\tiny]{misma clave K} (K_B);
+\draw[-Latex, thick, accentblue!60,
+      transform canvas={yshift=-0.05cm}] (E_A.east) -- node[above,font=\tiny]{cifrado} ++(1.5,0);
+\end{tikzpicture}
 \end{columns}
 \end{frame}
 
@@ -409,18 +513,18 @@ def cosine_sim(v1, v2):
 \begin{frame}{Ejemplo de Conversación}
 \centering
 \small
-\begin{tabular}{p{4.5cm} p{6cm}}
+\begin{tabular}{p{4.5cm} p{6.4cm}}
 \toprule
 \textbf{Usuario} & \textbf{Bot (intención)} \\
 \midrule
 cuales son mis pedidos &
-  CONSULTAR (score=0.35) --- \textit{Cuál es tu ID?} \\[4pt]
+  CONSULTAR, score 0.35 --- \textit{Cuál es tu ID?} \\[4pt]
 quiero registrarme &
-  REGISTRAR (score=0.62) --- \textit{Cuál es tu nombre?} \\[4pt]
+  REGISTRAR, score 0.62 --- \textit{Cuál es tu nombre?} \\[4pt]
 quisiera comprar croquetas &
-  PEDIDO (score=0.50) --- \textit{Numero de cliente?} \\[4pt]
+  PEDIDO, score 0.50 --- \textit{Numero de cliente?} \\[4pt]
 dame el reporte de ventas &
-  REPORTE (score=0.53) --- \textit{Estadísticas} \\
+  REPORTE, score 0.53 --- \textit{Estadísticas} \\
 \bottomrule
 \end{tabular}
 \end{frame}
@@ -467,7 +571,33 @@ public class MetricsCollector {
 \end{enumerate}
 
 \vfill
-\nododiagram{width=0.7\textwidth}{Flujo de clonación QR entre dispositivos}
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm and 2.5cm,
+  actor/.style={rectangle, rounded corners=3pt, draw, minimum width=1.8cm,
+                minimum height=0.6cm, align=center, font=\small},
+  arr/.style={-Latex, thick, font=\tiny},
+  msg/.style={font=\tiny, align=center}
+]
+\node[actor, fill=green!10, draw=accentgreen] (A) {Cliente A};
+\node[actor, fill=blue!10, draw=accentblue]   (S) at (3.5,0) {Servidor};
+\node[actor, fill=green!10, draw=accentgreen] (B) at (7,0)   {Cliente B};
+
+\draw[arr] (A.north) -- ++(0,0.3) -| node[pos=0.25,above,font=\tiny]{1. solicita token} (S.north);
+\draw[arr] (S.north) -- ++(0,0.3) -| node[pos=0.25,above,font=\tiny]{2. UUID + TTL 120s} (A.north);
+
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      font=\tiny, below=0.3cm of A] (QR) {\parbox{1.7cm}{\centering 3. Muestra\\ código QR}};
+\draw[->, thick, accentorange] (A.south) -- (QR.north);
+
+\node[draw=accentorange, fill=orange!5, rounded corners=2pt,
+      font=\tiny, below=0.3cm of QR] (scan) {4. B escanea QR};
+\draw[->, thick, accentorange] (QR.south) -- (scan.north);
+\draw[Latex-, accentorange] (scan.east) -- ++(0.8,0) node[right,font=\tiny]{lee token};
+
+\draw[arr] (B.south) -- ++(0,-0.3) -| node[pos=0.25,below,font=\tiny]{5. envía token} (S.south);
+\draw[arr] (S.south) -- ++(0,-0.3) -| node[pos=0.25,below,font=\tiny]{6. historial de A} (B.south);
+\end{tikzpicture}
 \end{frame}
 
 %% =============================================================================
